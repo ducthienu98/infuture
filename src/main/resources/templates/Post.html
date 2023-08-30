@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Chi tiết bài đăng</title>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Trang Chủ</title>
+	<!-- IconScout CDN -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<link rel="stylesheet" href="https://unicons.iconscout.com/release/v2.1.6/css/unicons.css">
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<link rel="stylesheet" href="./css/post.css">
+	<style>
+
+	</style>
+</head>
+
+<body>
+	<div class="home-button">
+		<a href="/home">Trang chủ</a>
+	</div>
+	<div class="post">
+		<div class="feeds" id="feeds">
+
+
+		</div>
+	</div>
+
+	<script>
+		$(document).ready(function () {
+			var postResult = JSON.parse(sessionStorage.getItem('postResult'));
+			var post = postResult.post;
+			var comments = postResult.comments;
+			var likes = postResult.likes;
+			var likeOrDislike = postResult.likeOrDislike;
+			// Sử dụng dữ liệu trong post để hiển thị trên trang post.html
+			var id = post.post_id;
+			var commentsHtml = '<div class="comments"data-post-id="' + id + '">';
+			for (var j = 0; j < comments.length; j++) {
+				var comment = comments[j];
+				commentsHtml += '<div id="comment-parent-' + post.post_id + '" class="comment">' +
+					'<div class="profile-photo"><img src="./images/' + comment.user.profile_picture + '"></div>' +
+					'<div class="info"><h4>' + comment.user.fullname + ': </h4></div>' +
+					'<p>' + comment.text + '</p>' +
+					'</div>';
+			}
+			commentsHtml += '</div>';
+
+			var html = '<div class="feed"><div class="head"><div class="user"> ' +
+				'<div class="profile-photo"><img src="./images/' + post.user.profile_picture + '"></div>' +
+				'<div class="info"><h3>' + post.user.fullname + '</h3><small>@' + post.user.username + '</small></div ></div ></div > ' +
+				'<div class="photo"><img src="./images/' + post.image_url + '"></div>' +
+				'<div class="action-buttons"><div class="interaction-buttons"><i style="cursor: pointer;" id="post-' + post.post_id + '" class="uil uil-heart like-post"><span id="likes-' + post.post_id + '" style="font-size: 16px;">' + likes.length + '</span></i>' +
+				'<span>     </span><i id="comment-post" class="uil uil-comment-dots"><span style="font-size: 16px;" id="commentcount-' + post.post_id + '">' + comments.length + '</span></i></div></div>' +
+				'<div class="caption">' +
+				'</div<p>' + post.caption + '</p>' +
+				commentsHtml +
+				// Thêm ô nhập bình luận
+				'<input id="comment-' + post.post_id + '" class="comment-post" type="text" placeholder="Viết bình luận...">' +
+				'</div>';
+
+			// Thêm đoạn mã HTML vào trang
+			document.querySelector('#feeds').innerHTML += html;
+			if (likeOrDislike == 1) {
+				$('#post-' + post.post_id).addClass('red-heart');
+			} else {
+				$('#post-' + post.post_id).removeClass('red-heart');
+			}
+			const inputs = document.querySelectorAll('.comment-post');
+			inputs.forEach(function (input) {
+				input.addEventListener('keydown', function (event) {
+					if (event.key === 'Enter') {
+
+						var id = input.id;
+						var post_id = id.split('-')[1];
+
+						$.ajax({
+							url: '/api/post-home/comment-post',
+							type: 'POST',
+							data: JSON.stringify({
+								id_post: post_id,
+								text: input.value
+							}),
+							contentType: 'application/json',
+							success: function (data) {
+								var commentCount = data.commentCount;
+								document.querySelector('#commentcount-' + post_id).innerText = commentCount;
+								var commentElement = document.querySelector('.comments[data-post-id="' + post_id + '"]');
+
+								commentElement.innerHTML += '<div class="comment">' +
+									'<div class="profile-photo"><img src="./images/' + data.comment.user.profile_picture + '"></div>' +
+									'<div class="info"><h4>' + data.comment.user.fullname + ': </h4></div>' +
+									'<p>' + data.comment.text + '</p>' +
+									'</div>';
+								console.log("Thêm thành công");
+							}
+						});
+						input.value = '';
+					}
+				});
+			});
+
+		})
+		$(document).on('click', '.like-post', function () {
+			const post = $(this).attr('id');
+			var post_id = post.split('-')[1];
+			const csrfToken = $('meta[name="_csrf"]').attr('content');
+			var self = this;
+			$.ajax({
+				url: '/api/post-home/like-post',
+				type: 'POST',
+				data: JSON.stringify({
+					post_id: post_id
+				}),
+				contentType: 'application/json',
+				headers: {
+					'X-CSRF-TOKEN': csrfToken
+				},
+				success: function (data) {
+					if (data.action === 'like') {
+						// Nếu người dùng đã like bài viết, hiển thị số lượng likes mới
+						$('#likes-' + post_id + '').text('' + data.likes + '');
+						$(self).addClass('red-heart');
+					} else if (data.action === 'dislike') {
+						// Nếu người dùng đã dislike bài viết, hiển thị số lượng likes mới
+						$('#likes-' + post_id + '').text('' + data.likes + '');
+						$(self).removeClass('red-heart');
+					}
+				}
+			});
+		});
+	</script>
+</body>
+
+</html>

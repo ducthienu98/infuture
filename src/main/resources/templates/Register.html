@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<title>Đăng ký</title>
+	<link rel="stylesheet" href="./css/Register.css" />
+</head>
+
+<body>
+
+	<main>
+		<div class="page">
+			<div class="header">
+				<h1 class="logo">InFuture</h1>
+				<div>
+					<hr>
+					<p></p>
+					<hr>
+				</div>
+			</div>
+			<div class="container">
+				<form th:action="@{/register}" th:object="${user}" method="post" id="registerForm"
+					enctype="multipart/form-data">
+					<p th:if="${error != null}" th:text="${error}" style="color: red;"></p>
+					<input type="text" th:field="*{username}" id="username" placeholder="Tên đăng nhập">
+					<input type="password" th:field="*{password}" id="password" placeholder="Mật khẩu">
+					<input type="text" th:field="*{email}" id="email" placeholder="Email">
+					<input type="text" th:field="*{fullname}" id="name" placeholder="Tên của bạn">
+					<input type="text" th:field="*{bio}" id="description" placeholder="Miêu tả bản thân">
+					<label for="avatar" class="custom-file-upload" id="avatarLabel">Chọn ảnh đại diện</label>
+					<input type="file" name="avatar" id="avatar" accept="image/*" onchange="loadFile(event)">
+					<img id="output" width="255" height="255">
+					<button>Đăng ký</button>
+				</form>
+
+			</div>
+
+		</div>
+		<div class="option">
+			<p>Bạn có tài khoản rồi? <a href="/login">Đăng nhập</a></p>
+		</div>
+	</main>
+	<script>
+
+		var loadFile = function (event) {
+			var output = document.getElementById('output');
+			output.src = URL.createObjectURL(event.target.files[0]);
+			output.onload = function () {
+				URL.revokeObjectURL(output.src) 
+			}
+		};
+		
+	</script>
+	<style>
+		#output {
+			border-radius: 50%;
+		}
+
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			background-color: #fafafa;
+		}
+
+		main {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+		}
+
+		.page {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			padding-bottom: 30px;
+		}
+
+		/* header style */
+		.page .header {
+			text-align: center;
+		}
+
+		.page .header .logo,
+		.page .header p,
+		.page .header button {
+			margin-bottom: 15px;
+		}
+
+		.page .header>p {
+			font-weight: bold;
+			color: #8e8e8e;
+			font-size: 18px;
+		}
+
+		.page .header>button {
+			width: inherit;
+			padding: 10px 20px;
+			border-radius: 5px;
+			border: none;
+			background-color: #0095f6;
+			color: #ffffff;
+		}
+
+		.page .header div {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			color: #8e8e8e;
+		}
+
+		.page .header div p {
+			padding: 0 20px;
+		}
+
+		.page .header div hr {
+			width: 200px;
+
+		}
+
+		/* container style*/
+		.page .container {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.page .container form,
+		input {
+			width: inherit;
+		}
+
+		.page .container form input {
+			border: 1px solid #dbdbdb;
+			background-color: #fafafa;
+			padding: 10px 5px;
+			margin: 5px 0;
+		}
+
+		.page .container form input:last-of-type {
+			margin-bottom: 10px;
+		}
+
+		.page .container form button {
+			width: inherit;
+			margin-bottom: 20px;
+			padding: 7px 20px;
+			border-radius: 5px;
+			border: none;
+			background-color: #0095f6;
+			color: #ffffff;
+		}
+
+		.page .container ul {
+			list-style: none;
+			text-align: center;
+			margin-bottom: 10px;
+		}
+
+		.page .container ul li {
+			display: inline;
+			color: #8e9096;
+		}
+
+		.page .container ul li a {
+			text-decoration: none;
+			font-weight: bold;
+			color: #8e9096;
+		}
+
+		/* option style */
+		.option p>a {
+			text-decoration: none;
+			color: #00a0f7;
+		}
+
+		/* footer style */
+		.footer {
+			bottom: 0;
+			height: 2.5rem;
+			margin-top: 50px;
+		}
+
+		.footer ul {
+			text-align: center;
+		}
+
+		.footer ul li {
+			display: inline;
+			margin-right: 5px;
+		}
+
+		.footer ul li a {
+			text-decoration: none;
+			font-size: 12px;
+			color: #00376b;
+		}
+
+		.footer p {
+			margin: 10px 0;
+			text-align: center;
+			color: #8e9096;
+			font-size: 14px;
+		}
+
+
+
+		/* Mobile Styles */
+
+		@media only screen and (max-width: 400px) {
+			body {
+				font-family: Freight Sans
+			}
+
+			.page {
+				width: 250px;
+				background-color: #fafafa;
+			}
+
+			.page .header {
+				width: inherit;
+				margin-top: 10px;
+			}
+
+			.page .container {
+				width: inherit;
+			}
+
+			.option {
+				margin: 80px 0;
+			}
+
+			.page .container input {
+				padding: 10px 5px;
+				margin: 5px 0;
+			}
+
+			.page .footer {
+				width: inherith
+			}
+		}
+
+		@media only screen and (min-width: 401px) {
+			body {
+				font-family: Neue Helvetica
+			}
+
+			.page {
+				border: 1px solid #dbdbdb;
+				width: 350px;
+				background-color: white;
+				margin: 40px 40px 10px 40px;
+			}
+
+			.page .header {
+				width: 270px;
+				margin-top: 15px;
+			}
+
+			.page .container {
+				width: 270px;
+			}
+
+			.option {
+				border: 1px solid #dbdbdb;
+				background-color: white;
+				width: 350px;
+				height: 70px;
+				margin-top: 20px 0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+
+			}
+
+			.page .footer {
+				width: 100%;
+			}
+		}
+
+		input[type="file"] {
+			display: none;
+		}
+
+		/* Tùy biến giao diện cho nhãn */
+		.custom-file-upload {
+			display: inline-block;
+			padding: 6px 12px;
+			cursor: pointer;
+			background-color: #4CAF50;
+			color: white;
+			border-radius: 4px;
+			margin-bottom: 10px;
+		}
+
+		button {
+			cursor: pointer;
+			height: 40px;
+		}
+
+		#description {
+			height: 60px;
+		}
+	</style>
+	<script>document.querySelector('#avatar').addEventListener('change', function (event) {
+			var filename = event.target.files[0].name;
+			document.querySelector('#avatarLabel').textContent = filename;
+			console.log(filename);
+		});</script>
+</body>
+
+</html>

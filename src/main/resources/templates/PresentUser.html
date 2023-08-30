@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>Trang cá nhân</title>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width" />
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
+	<link rel="stylesheet" href="./css/PresentUser.css" />
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+	<header>
+
+		<div class="container">
+
+			<div class="profile">
+
+				<div class="profile-image">
+					<img id="profile-image" src="" />
+				</div>
+				<div class="profile-user-settings">
+					<h1 class="profile-user-name"></h1>
+					<button class="btn profile-edit-btn" onclick="window.location.href='/home'">Trang chủ</button>
+					<button class="btn profile-edit-btn" onclick="window.location.href='/create-post'">Tạo bài viết</button>
+				</div>
+
+
+				<div class="profile-stats">
+					<ul>
+						<li><span class="profile-stat-count" id="profile-posts-count"></span> Bài viết</li>
+						<li><span class="profile-stat-count" id="profile-followers-count"></span> Bạn theo dõi</li>
+						<li><span class="profile-stat-count" id="profile-followeds-count"></span> Theo dõi bạn</li>
+					</ul>
+				</div>
+
+				<div class="profile-bio">
+
+					<p><span class="profile-real-name"></span><span class="profile-bio"></span></p>
+
+				</div>
+
+			</div>
+			<!-- End of profile section -->
+
+		</div>
+		<!-- End of container -->
+
+	</header>
+
+	<main>
+
+		<div class="container">
+
+			<div class="gallery" id="gallery">
+
+
+			</div>
+			<!-- End of gallery -->
+
+		</div>
+		<!-- End of container -->
+
+	</main>
+	<script>
+		$(document).on('click', '[id^=postDetail-]', function () {
+			var postId = $(this).attr('id').split('-')[1];
+			$.ajax({
+				url: '/api/post-detail',
+				type: 'GET',
+				data: {postId: postId},
+				success: function (data) {
+					sessionStorage.setItem('postResult', JSON.stringify(data));
+					window.location.href = '/post-detail';
+				}
+			});
+		});
+
+		$(document).ready(function () {
+			$.ajax({
+				url: '/api/present-users',
+				type: 'GET',
+				success: function (data) {
+
+					$('#profile-image').attr('src', './images/' + data.user.profile_picture);
+					$('.profile-user-name').text(data.user.username);
+					$('#profile-posts-count').text(data.posts.length);
+					$('#profile-followers-count').text(data.followersCount);
+					$('#profile-followeds-count').text(data.followedsCount);
+					$('.profile-real-name').text(data.user.fullname);
+					$('.profile-bio').text(data.user.bio);
+
+					if (data.posts.length == 0) {
+						// Hiển thị đoạn văn bản và nút button
+						var html = '<p  style="font-size: 20px;">Chưa có bài đăng nào. ' +
+							'<a href="/create-post" style="font-size:18px"><label class="btn btn-primary" for="create-post">Tạo bài viết ngay</label></a></p>';
+						document.querySelector('#gallery').innerHTML = html;
+
+						// Thêm sự kiện click cho nút button
+						document.querySelector('#createPostButton').addEventListener('click', function () {
+							// Thêm mã xử lý tạo bài đăng mới ở đây
+						});
+					} else
+						data.posts.forEach(function (item) {
+							var html = '<div class="gallery-item" id="postDetail-' + item.post.post_id + '" tabindex="0">' +
+								'<img src="./images/' + item.post.image_url + '" class="gallery-image" alt="" >' +
+								'<div class="gallery-item-info">' +
+								'<ul>' +
+								'<li class="gallery-item-likes"><span class="visually-hidden">Thích:</span><i class="fas fa-heart" aria-hidden="true"></i> ' + item.likeCounts + '</li>' +
+								'<li class="gallery-item-comments"><span class="visually-hidden">Bình luận:</span><i class="fas fa-comment" aria-hidden="true"></i> ' + item.commentCounts + '</li>' +
+								'</ul>' +
+								'</div>' +
+								'</div>';
+							// Thêm đoạn mã HTML vào trang
+							document.querySelector('#gallery').innerHTML += html;
+						});
+				}
+			});
+
+
+
+		});
+	</script>
+</body>
+
+</html>

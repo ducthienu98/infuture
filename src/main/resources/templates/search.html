@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Kết quả tìm kiếm</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+	<style>
+		.container {
+			max-width: 800px;
+			margin: 0 auto;
+			text-align: center;
+		}
+
+		#search-form {
+			display: inline-block;
+			margin-bottom: 20px;
+		}
+
+		#search-input {
+			width: 70%;
+			border-top-right-radius: 0;
+			border-bottom-right-radius: 0;
+		}
+
+		.user {
+			display: flex;
+			align-items: center;
+			margin-bottom: 20px;
+			padding: 10px;
+			border-radius: 10px;
+			box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+		}
+
+		.user:hover {
+			background-color: #f1f1f1;
+			cursor: pointer;
+		}
+
+		.user img {
+			width: 50px;
+			height: 50px;
+			border-radius: 50%;
+			margin-right: 20px;
+		}
+
+		.home-button {
+			position: fixed;
+			top: 20px;
+			right: 20px;
+		}
+
+		.home-button a {
+			display: block;
+			padding: 10px 15px;
+			background-color: #007bff;
+			color: white;
+			border-radius: 5px;
+			text-decoration: none;
+		}
+
+		.home-button a:hover {
+			background-color: #0069d9;
+		}
+
+		#search-input {
+			width: 300px;
+			border-radius: 20px;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="home-button">
+		<a href="/home">Trang chủ</a>
+	</div>
+	<div class="container">
+		<h1 class="my-4">Kết quả</h1>
+		<form id="search-form" class="form-inline mb-4">
+			<input type="text" id="search-input" class="form-control mr-2" placeholder="Tìm người dùng">
+		</form>
+		<br><br>
+		<div id="search-results"></div>
+	</div>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+	<script>
+		$(document).ready(function () {
+			var searchResults = JSON.parse(sessionStorage.getItem('searchResults'));
+			var listUsers = searchResults.listUsers;
+			for (var i = 0; i < listUsers.length; i++) {
+				var user = listUsers[i];
+				var id = user.user_id;
+				// display user information
+				var userElement = $('<div class="user" id="' + id + '"></div>');
+				var avatarElement = $('<img src="/images/' + user.profile_picture + '">');
+				var fullnameElement = $('<div class="fullname"></div>').text(user.fullname);
+				var usernameElement = $('<div class="username"></div>').text('@' + user.username);
+				var nameElement = $('<div></div>');
+				nameElement.append(fullnameElement);
+				nameElement.append(usernameElement);
+				userElement.append(avatarElement);
+				userElement.append(nameElement);
+				$('#search-results').append(userElement);
+			}
+
+			const users = document.querySelectorAll('.user');
+			users.forEach(function (user) {
+				$(user).on('click', function () {
+					var userId = $(this).attr('id');
+					window.location.href = '/profile?userId=' + userId;
+				});
+			});
+		});
+
+		$('#search-form').on('submit', function (event) {
+			event.preventDefault();
+			var fullname = $('#search-input').val();
+			$.ajax({
+				url: '/api/search',
+				data: {fullname: fullname},
+				success: function (data) {
+					// update search results with data
+					sessionStorage.setItem('searchResults', JSON.stringify(data));
+					window.location.reload();
+				}
+			});
+		});
+
+	</script>
+
+
+</body>
+
+</html>

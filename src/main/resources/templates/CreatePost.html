@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<title>Tạo bài đăng mới</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+		}
+
+		.form {
+			max-width: 600px;
+			margin: 0 auto;
+			padding: 20px;
+			border: 1px solid #ccc;
+			border-radius: 5px;
+		}
+
+		.form h2 {
+			margin: 0 0 20px;
+			font-size: 24px;
+		}
+
+		.form-group {
+			display: flex;
+			flex-direction: column;
+			margin-bottom: 20px;
+		}
+
+		.form-group label {
+			margin-bottom: 5px;
+			font-size: 16px;
+		}
+
+		.form-group input[type="text"],
+		.form-group textarea {
+			padding: 8px;
+			border-radius: 5px;
+			border: 1px solid #ccc;
+			font-size: 14px;
+		}
+
+		.form-group textarea {
+			resize: vertical;
+		}
+
+		.form-group input[type="file"] {
+			font-size: 14px;
+		}
+
+		.form-group button[type="submit"] {
+			padding: 10px 20px;
+			border-radius: 5px;
+			border: none;
+			background-color: #4CAF50;
+			color: white;
+			font-size: 16px;
+			cursor: pointer
+		}
+
+		#image {
+			display: inline-block;
+			padding: 6px 12px;
+			cursor: pointer;
+			background-color: #4CAF50;
+			color: white;
+			border-radius: 4px;
+			margin-bottom: 10px;
+			width: 140px
+		}
+
+		.preview-image {
+			max-width: 100%;
+			margin-bottom: 20px
+		}
+	</style>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+	<div class="form">
+		<h2>Tạo bài đăng mới</h2>
+		<form id="post-form" enctype="multipart/form-data">
+			<div class="form-group">
+				<label for="avatar" id="image">Chọn ảnh bài đăng</label>
+				<input type="file" name="avatar" id="avatar" accept="image/*" />
+				<img class="preview-image" src="" alt="">
+			</div>
+			<div class="form-group">
+				<label for="caption">Mô tả:</label>
+				<textarea id="caption" name="caption" rows="3" required></textarea>
+			</div>
+			<div class="form-group">
+				<button type="submit">Đăng</button>
+			</div>
+		</form>
+	</div>
+
+	<script>
+		$(document).ready(function () {
+			$('#avatar').on('change', function () {
+				var file = this.files[0];
+				if (file) {
+					var reader = new FileReader();
+					reader.onload = function (event) {
+						$('.preview-image').attr('src', event.target.result);
+					}
+					reader.readAsDataURL(file);
+				}
+			});
+			$('#post-form').on('submit', function (event) {
+				event.preventDefault();
+				if (!$('#avatar').val()) {
+					alert('Vui lòng chọn ảnh bài đăng!');
+					return;
+				}
+				var formData = new FormData(this);
+				$.ajax({
+					url: '/api/create-post',
+					type: 'POST',
+					data: formData,
+					processData: false,
+					contentType: false,
+					success: function (data) {
+						window.location.href = '/present-user';
+						console.log(data);
+					},
+					error: function (error) {
+						// Handle error
+						console.error(error);
+					}
+				});
+			});
+
+		});
+	</script>
+</body>
+
+</html>

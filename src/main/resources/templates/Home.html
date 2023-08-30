@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Trang Chủ</title>
+	<!-- IconScout CDN -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<link rel="stylesheet" href="https://unicons.iconscout.com/release/v2.1.6/css/unicons.css">
+	<!-- Stylesheet -->
+	<link rel="stylesheet" href="./css/Home.css">
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script>
+
+		$(document).ready(function () {
+
+			$('#search-input').on('keypress', function (event) {
+				if (event.which == 13) {
+					event.preventDefault();
+					var fullname = $(this).val();
+					$.ajax({
+						url: '/api/search',
+						data: {fullname: fullname},
+						success: function (data) {
+							sessionStorage.setItem('searchResults', JSON.stringify(data));
+							window.location.href = '/search';
+						}
+					});
+				}
+			});
+
+			$.ajax({
+				url: '/api/unfollowed_users',
+				type: 'GET',
+				success: function (data) {
+					for (var i = 0; i < data.length; i++) {
+						var user = data[i];
+						var html = '<a href="/profile?userId=' + user.user_id + '"><div class="request">' +
+							'<div class="info">' +
+							'<div class="profile-photo">' +
+							'<img src="/images/' + user.profile_picture + '">' +
+							'</div>' +
+							'<div>' +
+							'<h5>' + user.fullname + '</h5>' +
+							'<p class="text-muted">@' + user.username + '</p>' +
+							'</div>' +
+							'</div></a><div class="action"><button class="btn btn-primary btn-follow" id="' + user.user_id + '">Theo dõi' +
+							'</button></div>';
+						$('#unfollowed-users').append(html);
+					}
+				}
+			});
+
+			$(document).on('click', '.btn-follow', function () {
+				const followedId = $(this).attr('id');
+				const csrfToken = $('meta[name="_csrf"]').attr('content');
+				$.ajax({
+					url: '/api/follow-user',
+					type: 'POST',
+					data: JSON.stringify({
+						followed_id: followedId
+					}),
+					contentType: 'application/json',
+					headers: {
+						'X-CSRF-TOKEN': csrfToken
+					},
+					success: function (data) {
+						$('#' + followedId).attr('id', 'profile-' + followedId);
+						$('#profile-' + followedId).text('Xem trang');
+						$('#profile-' + followedId).on('click', function () {
+							window.location.href = '/profile?userId=' + followedId;
+						});
+					}
+				});
+			});
+			$.ajax({
+				url: '/api/post-home/all-post',
+				type: 'GET',
+				success: function (data) {
+					$('#image-customer').attr('src', './images/' + data.user.profile_picture);
+					$('#fullname-customer').text(data.user.fullname);
+					$('#username-customer').text('@' + data.user.username);
+					var listPost = data.listPost;
+					for (var i = 0; i < listPost.length; i++) {
+						var post = listPost[i][0];
+						var likes = listPost[i][1];
+						var comments = listPost[i][2];
+						var likeOrDislike = listPost[i][3];
+						var id = post.post_id;
+						var commentsHtml = '<div class="comments" data-post-id="'+id+'">';
+						for (var j = 0; j < comments.length; j++) {
+							var comment = comments[j];
+							commentsHtml += '<div id="comment-parent-' + post.post_id + '" class="comment">' +
+								'<div class="profile-photo"><img src="./images/' + comment.user.profile_picture + '"></div>' +
+								'<div class="info"><h4>' + comment.user.fullname + ': </h4></div>' +
+								'<p>' + comment.text + '</p>' +
+								'</div>';
+						}
+						commentsHtml += '</div>';
+
+						var html = '<div class="feed"><div class="head"><div class="user"> ' +
+							'<div class="profile-photo"><img src="./images/' + post.user.profile_picture + '"></div>' +
+							'<div class="info"><h3>' + post.user.fullname + '</h3><small>@' + post.user.username + '</small></div ></div ></div > ' +
+							'<div class="photo"><img src="./images/' + post.image_url + '"></div>' +
+							'<div class="action-buttons"><div class="interaction-buttons"><i style="cursor: pointer;" id="post-' + post.post_id + '" class="uil uil-heart like-post"><span id="likes-' + post.post_id + '" style="font-size: 16px;">' + likes.length + '</span></i>' +
+							'<span>     </span><i id="comment-post" class="uil uil-comment-dots"><span style="font-size: 16px;" id="commentcount-' + post.post_id + '">' + comments.length + '</span></i></div></div>' +
+							'<div class="caption">' +
+							'</div<p>' + post.caption + '</p>' +
+							commentsHtml +
+							// Thêm ô nhập bình luận
+							'<input id="comment-' + post.post_id + '" class="comment-post" type="text" placeholder="Viết bình luận...">' +
+							'</div>';
+
+						// Thêm đoạn mã HTML vào trang
+						document.querySelector('#feeds').innerHTML += html;
+						if (likeOrDislike == 1) {
+							$('#post-' + post.post_id).addClass('red-heart');
+						} else {
+							$('#post-' + post.post_id).removeClass('red-heart');
+						}
+						const inputs = document.querySelectorAll('.comment-post');
+						inputs.forEach(function (input) {
+							input.addEventListener('keydown', function (event) {
+								if (event.key === 'Enter') {
+
+									var id = input.id;
+									var post_id = id.split('-')[1];
+									$.ajax({
+										url: '/api/post-home/comment-post',
+										type: 'POST',
+										data: JSON.stringify({
+											id_post: post_id,
+											text: input.value
+										}),
+										contentType: 'application/json',
+										success: function (data) {
+											var commentCount = data.commentCount;
+											document.querySelector('#commentcount-' + post_id).innerText = commentCount;
+											var commentElement = document.querySelector('.comments[data-post-id="' + post_id + '"]');
+
+											commentElement.innerHTML += '<div class="comment">' +
+												'<div class="profile-photo"><img src="./images/' + data.comment.user.profile_picture + '"></div>' +
+												'<div class="info"><h4>' + data.comment.user.fullname + ': </h4></div>' +
+												'<p>' + data.comment.text + '</p>' +
+												'</div>';
+											console.log("Thêm thành công");
+										}
+									});
+									input.value = '';
+								}
+							});
+						});
+					}
+				}
+			});
+
+
+			$(document).on('click', '.like-post', function () {
+				const post = $(this).attr('id');
+				var post_id = post.split('-')[1];
+				const csrfToken = $('meta[name="_csrf"]').attr('content');
+				var self = this;
+				$.ajax({
+					url: '/api/post-home/like-post',
+					type: 'POST',
+					data: JSON.stringify({
+						post_id: post_id
+					}),
+					contentType: 'application/json',
+					headers: {
+						'X-CSRF-TOKEN': csrfToken
+					},
+					success: function (data) {
+						if (data.action === 'like') {
+							// Nếu người dùng đã like bài viết, hiển thị số lượng likes mới
+							$('#likes-' + post_id + '').text('' + data.likes + '');
+							$(self).addClass('red-heart');
+						} else if (data.action === 'dislike') {
+							// Nếu người dùng đã dislike bài viết, hiển thị số lượng likes mới
+							$('#likes-' + post_id + '').text('' + data.likes + '');
+							$(self).removeClass('red-heart');
+						}
+					}
+				});
+			});
+
+
+
+		});
+	</script>
+</head>
+
+<body>
+	<nav>
+		<div class="container">
+			<h1 class="logo">
+				InFutre
+			</h1>
+			<div class="search-bar">
+				<i class="uil uil-search"></i>
+				<input id="search-input" type="search" placeholder="Tìm kiếm...">
+			</div>
+			<div class="logout">
+				<form th:action="@{/logout}" method="post">
+					<input class="btn btn-primary" type="submit" value="Đăng xuất" />
+				</form>
+			</div>
+
+		</div>
+	</nav>
+
+	<!-- MAIN -->
+	<main>
+		<div class="container">
+			<!-- LEFT -->
+			<div class="left">
+				<a class="profile" href="/present-user">
+					<div class="profile-photo">
+						<img src="" id="image-customer">
+					</div>
+					<div class="handle">
+						<h4 id="fullname-customer"></h4>
+						<p class="text-muted" id="username-customer">
+
+						</p>
+					</div>
+				</a>
+
+				<!-- SIDEBAR -->
+				<div class="sidebar">
+					<a class="menu-item active">
+						<span><i class="uil uil-home"></i></span>
+						<h3>Trang chủ</h3>
+					</a>
+				</div>
+				<!-- END OF SIDEBAR -->
+				<a href="/create-post"><label class="btn btn-primary" for="create-post">Tạo bài viết</label></a>
+			</div>
+
+			<!-- MIDDLE -->
+			<div class="middle">
+				<!-- FEEDS -->
+				<div class="feeds" id="feeds">
+					<!-- FEED 1 -->
+
+					<!-- END OF FEED  -->
+
+				</div>
+				<!-- END OF FEEDS -->
+			</div>
+			<!-- END OF MIDDLE -->
+
+			<!-- RIGHT -->
+			<div class="right">
+				<div class="friend-requests">
+
+					<div class="request" id="unfollowed-users">
+						<h4>Người bạn có thể biết</h4>
+						<span>---------------------------</span>
+					</div>
+				</div>
+			</div>
+			<!-- END OF RIGHT -->
+		</div>
+	</main>
+
+</body>
+
+</html>
